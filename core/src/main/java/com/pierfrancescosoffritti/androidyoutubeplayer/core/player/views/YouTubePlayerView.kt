@@ -1,11 +1,17 @@
 package com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import androidx.annotation.Keep
 import androidx.annotation.LayoutRes
 import androidx.lifecycle.*
 import com.pierfrancescosoffritti.androidyoutubeplayer.R
@@ -14,15 +20,17 @@ import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.*
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.options.IFramePlayerOptions
 import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.utils.loadOrCueVideo
 
-private const val AUTO_INIT_ERROR = "YouTubePlayerView: If you want to initialize this view manually, " +
-        "you need to set 'enableAutomaticInitialization' to false."
+private const val AUTO_INIT_ERROR =
+  "YouTubePlayerView: If you want to initialize this view manually, " +
+          "you need to set 'enableAutomaticInitialization' to false."
 
 private val matchParent
   get() = FrameLayout.LayoutParams(
     LayoutParams.MATCH_PARENT,
     LayoutParams.MATCH_PARENT
   )
-
+@Keep
+@Suppress("TooManyFunctions")
 class YouTubePlayerView(
   context: Context,
   attrs: AttributeSet? = null,
@@ -35,7 +43,7 @@ class YouTubePlayerView(
   private val fullscreenListeners = mutableListOf<FullscreenListener>()
 
   /**
-   * A single [FullscreenListener] that is always added to the WebView,
+   * A single [com.app.codamusic.onboarding.ui.youtube.core.player.listeners.FullscreenListener] that is always added to the WebView,
    * responsible for calling all optional listeners added from clients of the library.
    */
   private val webViewFullscreenListener = object : FullscreenListener {
@@ -62,11 +70,14 @@ class YouTubePlayerView(
   init {
     addView(legacyTubePlayerView, matchParent)
 
-    val typedArray = context.theme.obtainStyledAttributes(attrs, R.styleable.YouTubePlayerView, 0, 0)
+    val typedArray =
+      context.theme.obtainStyledAttributes(attrs, R.styleable.YouTubePlayerView, 0, 0)
 
-    enableAutomaticInitialization = typedArray.getBoolean(R.styleable.YouTubePlayerView_enableAutomaticInitialization, true)
+    enableAutomaticInitialization =
+      typedArray.getBoolean(R.styleable.YouTubePlayerView_enableAutomaticInitialization, true)
     val autoPlay = typedArray.getBoolean(R.styleable.YouTubePlayerView_autoPlay, false)
-    val handleNetworkEvents = typedArray.getBoolean(R.styleable.YouTubePlayerView_handleNetworkEvents, true)
+    val handleNetworkEvents =
+      typedArray.getBoolean(R.styleable.YouTubePlayerView_handleNetworkEvents, true)
     val videoId = typedArray.getString(R.styleable.YouTubePlayerView_videoId)
 
     typedArray.recycle()
@@ -78,7 +89,11 @@ class YouTubePlayerView(
     val youTubePlayerListener = object : AbstractYouTubePlayerListener() {
       override fun onReady(youTubePlayer: YouTubePlayer) {
         videoId?.let {
-          youTubePlayer.loadOrCueVideo(legacyTubePlayerView.canPlay && autoPlay, videoId, 0f)
+          youTubePlayer.loadOrCueVideo(
+            legacyTubePlayerView.canPlay && autoPlay,
+            videoId,
+            0f
+          )
         }
 
         youTubePlayer.removeListener(this)
@@ -89,19 +104,27 @@ class YouTubePlayerView(
       legacyTubePlayerView.initialize(
         youTubePlayerListener,
         handleNetworkEvents,
-        IFramePlayerOptions.getDefault(context),
+        IFramePlayerOptions.getDefault(this.context),
         videoId
       )
     }
   }
 
-  // TODO: Use @JvmOverloads instead of duplicating the method. Unfortunately that will cause a breaking change.
-  fun initialize(youTubePlayerListener: YouTubePlayerListener, handleNetworkEvents: Boolean, playerOptions: IFramePlayerOptions, videoId: String?) {
+  fun initialize(
+    youTubePlayerListener: YouTubePlayerListener,
+    handleNetworkEvents: Boolean,
+    playerOptions: IFramePlayerOptions,
+    videoId: String?
+  ) {
     if (enableAutomaticInitialization) {
       throw IllegalStateException(AUTO_INIT_ERROR)
-    }
-    else {
-      legacyTubePlayerView.initialize(youTubePlayerListener, handleNetworkEvents, playerOptions, videoId)
+    } else {
+      legacyTubePlayerView.initialize(
+        youTubePlayerListener,
+        handleNetworkEvents,
+        playerOptions,
+        videoId
+      )
     }
   }
 
@@ -113,12 +136,20 @@ class YouTubePlayerView(
    * @param playerOptions customizable options for the embedded video player.
    * @param videoId optional, used to load an initial video.
    */
-  fun initialize(youTubePlayerListener: YouTubePlayerListener, handleNetworkEvents: Boolean, playerOptions: IFramePlayerOptions) {
+  fun initialize(
+    youTubePlayerListener: YouTubePlayerListener,
+    handleNetworkEvents: Boolean,
+    playerOptions: IFramePlayerOptions
+  ) {
     if (enableAutomaticInitialization) {
       throw IllegalStateException(AUTO_INIT_ERROR)
-    }
-    else {
-      legacyTubePlayerView.initialize(youTubePlayerListener, handleNetworkEvents, playerOptions, null)
+    } else {
+      legacyTubePlayerView.initialize(
+        youTubePlayerListener,
+        handleNetworkEvents,
+        playerOptions,
+        null
+      )
     }
   }
 
@@ -132,9 +163,12 @@ class YouTubePlayerView(
   fun initialize(youTubePlayerListener: YouTubePlayerListener, handleNetworkEvents: Boolean) {
     if (enableAutomaticInitialization) {
       throw IllegalStateException(AUTO_INIT_ERROR)
-    }
-    else {
-      legacyTubePlayerView.initialize(youTubePlayerListener, handleNetworkEvents, IFramePlayerOptions.getDefault(context))
+    } else {
+      legacyTubePlayerView.initialize(
+        youTubePlayerListener,
+        handleNetworkEvents,
+        IFramePlayerOptions.getDefault(this.context)
+      )
     }
   }
 
@@ -143,11 +177,13 @@ class YouTubePlayerView(
    *
    * @see YouTubePlayerView.initialize
    */
-  fun initialize(youTubePlayerListener: YouTubePlayerListener, playerOptions: IFramePlayerOptions) {
+  fun initialize(
+    youTubePlayerListener: YouTubePlayerListener,
+    playerOptions: IFramePlayerOptions
+  ) {
     if (enableAutomaticInitialization) {
       throw IllegalStateException(AUTO_INIT_ERROR)
-    }
-    else {
+    } else {
       legacyTubePlayerView.initialize(youTubePlayerListener, true, playerOptions)
     }
   }
@@ -161,8 +197,7 @@ class YouTubePlayerView(
   fun initialize(youTubePlayerListener: YouTubePlayerListener) {
     if (enableAutomaticInitialization) {
       throw IllegalStateException(AUTO_INIT_ERROR)
-    }
-    else {
+    } else {
       legacyTubePlayerView.initialize(youTubePlayerListener, true)
     }
   }
@@ -172,7 +207,8 @@ class YouTubePlayerView(
    * If the player is ready when the function is called, the callback will return immediately.
    * This function is called only once.
    */
-  fun getYouTubePlayerWhenReady(youTubePlayerCallback: YouTubePlayerCallback) = legacyTubePlayerView.getYouTubePlayerWhenReady(youTubePlayerCallback)
+  fun getYouTubePlayerWhenReady(youTubePlayerCallback: YouTubePlayerCallback) =
+    legacyTubePlayerView.getYouTubePlayerWhenReady(youTubePlayerCallback)
 
   /**
    * Use this method to add your own custom UI to the player.
@@ -184,21 +220,23 @@ class YouTubePlayerView(
    * @param layoutId the ID of the layout defining the custom Ui.
    * @return The inflated View
    */
-  fun inflateCustomPlayerUi(@LayoutRes layoutId: Int) = legacyTubePlayerView.inflateCustomPlayerUi(layoutId)
+  fun inflateCustomPlayerUi(@LayoutRes layoutId: Int) =
+    legacyTubePlayerView.inflateCustomPlayerUi(layoutId)
 
   fun setCustomPlayerUi(view: View) = legacyTubePlayerView.setCustomPlayerUi(view)
 
   /**
    * Don't use this method if you want to publish your app on the PlayStore. Background playback is against YouTube terms of service.
    */
-  fun enableBackgroundPlayback(enable: Boolean) = legacyTubePlayerView.enableBackgroundPlayback(enable)
+  fun enableBackgroundPlayback(enable: Boolean) =
+    legacyTubePlayerView.enableBackgroundPlayback(enable)
 
   override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
     when (event) {
       Lifecycle.Event.ON_RESUME -> onResume()
       Lifecycle.Event.ON_STOP -> onStop()
       Lifecycle.Event.ON_DESTROY -> release()
-      Lifecycle.Event.ON_CREATE, Lifecycle.Event.ON_START, Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_ANY -> { }
+      Lifecycle.Event.ON_CREATE, Lifecycle.Event.ON_START, Lifecycle.Event.ON_PAUSE, Lifecycle.Event.ON_ANY -> {}
     }
   }
 
@@ -211,13 +249,17 @@ class YouTubePlayerView(
 
   private fun onStop() = legacyTubePlayerView.onStop()
 
-  fun addYouTubePlayerListener(youTubePlayerListener: YouTubePlayerListener) = legacyTubePlayerView.webViewYouTubePlayer.addListener(youTubePlayerListener)
+  fun addYouTubePlayerListener(youTubePlayerListener: YouTubePlayerListener) =
+    legacyTubePlayerView.webViewYouTubePlayer.addListener(youTubePlayerListener)
 
-  fun removeYouTubePlayerListener(youTubePlayerListener: YouTubePlayerListener) = legacyTubePlayerView.webViewYouTubePlayer.removeListener(youTubePlayerListener)
+  fun removeYouTubePlayerListener(youTubePlayerListener: YouTubePlayerListener) =
+    legacyTubePlayerView.webViewYouTubePlayer.removeListener(youTubePlayerListener)
 
-  fun addFullscreenListener(fullscreenListener: FullscreenListener) = fullscreenListeners.add(fullscreenListener)
+  fun addFullscreenListener(fullscreenListener: FullscreenListener) =
+    fullscreenListeners.add(fullscreenListener)
 
-  fun removeFullscreenListener(fullscreenListener: FullscreenListener) = fullscreenListeners.remove(fullscreenListener)
+  fun removeFullscreenListener(fullscreenListener: FullscreenListener) =
+    fullscreenListeners.remove(fullscreenListener)
 
   /**
    * Convenience method to set the [YouTubePlayerView] width and height to match parent.
@@ -238,6 +280,37 @@ class YouTubePlayerView(
       targetWidth = ViewGroup.LayoutParams.MATCH_PARENT,
       targetHeight = ViewGroup.LayoutParams.WRAP_CONTENT
     )
+  }
+
+  fun overrideUrlLoading(redirectAction: () -> Unit) {
+    legacyTubePlayerView.webViewYouTubePlayer.webViewClient = object : WebViewClient() {
+      override fun shouldOverrideUrlLoading(
+        view: WebView?,
+        request: WebResourceRequest?
+      ): Boolean {
+        redirectAction()
+        return true
+      }
+    }
+  }
+
+  fun fullScreenListener(fullscreenClick: (Boolean, View?) -> Unit) {
+    legacyTubePlayerView.webViewYouTubePlayer.webChromeClient =
+      object : WebChromeClient() {
+        override fun onShowCustomView(view: View, callback: CustomViewCallback) {
+          super.onShowCustomView(view, callback)
+          fullscreenClick(true, view)
+        }
+
+        override fun onHideCustomView() {
+          super.onHideCustomView()
+          fullscreenClick(false, null)
+        }
+
+        override fun getDefaultVideoPoster(): Bitmap {
+          return Bitmap.createBitmap(1, 1, Bitmap.Config.RGB_565)
+        }
+      }
   }
 
   @Suppress("SameParameterValue")
